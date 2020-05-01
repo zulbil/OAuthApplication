@@ -12,18 +12,21 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Psr\Log\LoggerInterface;
 
 class GoogleAuthenticator extends SocialAuthenticator
 {
     private $clientRegistry;
     private $em;
     private $router;
+    private $logger;
 
-    public function __construct(ClientRegistry $clientRegistry, EntityManagerInterface $em, RouterInterface $router)
+    public function __construct(ClientRegistry $clientRegistry, EntityManagerInterface $em, RouterInterface $router, LoggerInterface $logger)
     {
         $this->clientRegistry = $clientRegistry;
         $this->em = $em;
         $this->router = $router;
+        $this->logger = $logger; 
     }
 
     public function supports(Request $request)
@@ -50,31 +53,34 @@ class GoogleAuthenticator extends SocialAuthenticator
         $googleUser = $this->getGoogleClient()
             ->fetchUserFromToken($credentials);
 
-        $email = $googleUser->getEmail();
+        $this->logger->info('test-auth', [$googleUser]); 
 
-        // 1) have they logged in with Google before? Easy!
-        $existingUser = $this->em->getRepository(User::class)
-            ->findOneBy(['googleId' => $googleUser->getId()]);
-        if ($existingUser) {
-            return $existingUser;
-        }
 
-        // 2) do we have a matching user by email?
-        $user = $this->em->getRepository(User::class)
-                    ->findOneBy(['email' => $email]);
-        if ( !$user ) {
-            $user = new User();
-            $user->setEmail($email); 
-        }   
+        // $email = $googleUser->getEmail();
 
-        // 3) Maybe you just want to "register" them by creating
-        // a User object
-        $user->setGoogleId($googleUser->getId());
-        $user->setRoles(["ROLE_USER", "ROLE_OAUTH_USER"]);
-        $this->em->persist($user);
-        $this->em->flush();
+        // // 1) have they logged in with Google before? Easy!
+        // $existingUser = $this->em->getRepository(User::class)
+        //     ->findOneBy(['googleId' => $googleUser->getId()]);
+        // if ($existingUser) {
+        //     return $existingUser;
+        // }
 
-        return $user;
+        // // 2) do we have a matching user by email?
+        // $user = $this->em->getRepository(User::class)
+        //             ->findOneBy(['email' => $email]);
+        // if ( !$user ) {
+        //     $user = new User();
+        //     $user->setEmail($email); 
+        // }   
+
+        // // 3) Maybe you just want to "register" them by creating
+        // // a User object
+        // $user->setGoogleId($googleUser->getId());
+        // $user->setRoles(["ROLE_USER", "ROLE_OAUTH_USER"]);
+        // $this->em->persist($user);
+        // $this->em->flush();
+
+        return null;
     }
 
     /**
