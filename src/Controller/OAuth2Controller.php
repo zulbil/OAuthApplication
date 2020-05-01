@@ -81,7 +81,9 @@ class OAuth2Controller extends AbstractController
         return $clientRegistry
             ->getClient('google') // key used in config/packages/knpu_oauth2_client.yaml
             ->redirect([
-            'userinfo.profile', 'userinfo.email' // the scopes you want to access
+                'openid', 
+                'https://www.googleapis.com/auth/userinfo.email', 
+                'https://www.googleapis.com/auth/userinfo.profile'
             ])
         ;
     }
