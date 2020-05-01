@@ -13,6 +13,9 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class GoogleAuthenticator extends SocialAuthenticator
 {
@@ -20,13 +23,16 @@ class GoogleAuthenticator extends SocialAuthenticator
     private $em;
     private $router;
     private $logger;
+    private $serializer;
 
-    public function __construct(ClientRegistry $clientRegistry, EntityManagerInterface $em, RouterInterface $router, LoggerInterface $logger)
+    public function __construct(ClientRegistry $clientRegistry, EntityManagerInterface $em,
+                                RouterInterface $router, LoggerInterface $logger, SerializerInterface $serializer)
     {
         $this->clientRegistry = $clientRegistry;
         $this->em = $em;
         $this->router = $router;
-        $this->logger = $logger; 
+        $this->logger = $logger;
+        $this->serializer = $serializer;
     }
 
     public function supports(Request $request)
@@ -49,11 +55,14 @@ class GoogleAuthenticator extends SocialAuthenticator
 
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
+
         /** @var FacebookUser $facebookUser */
         $googleUser = $this->getGoogleClient()
             ->fetchUserFromToken($credentials);
 
-        $this->logger->info('test-auth', [$googleUser]); 
+        $jsonObject = $this->serializer->serialize($googleUser, 'json');
+
+        $this->logger->info('test-auth', [$jsonObject]);
 
 
         // $email = $googleUser->getEmail();
