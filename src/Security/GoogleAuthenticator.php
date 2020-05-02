@@ -56,7 +56,7 @@ class GoogleAuthenticator extends SocialAuthenticator
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
 
-        /** @var FacebookUser $facebookUser */
+        /** @var GoogleUser $googleUser */
         $googleUser = $this->getGoogleClient()
             ->fetchUserFromToken($credentials);
 
@@ -65,31 +65,32 @@ class GoogleAuthenticator extends SocialAuthenticator
         $this->logger->info('test-auth', [$jsonObject]);
 
 
-        // $email = $googleUser->getEmail();
+        $email = $googleUser->getEmail();
 
         // // 1) have they logged in with Google before? Easy!
-        // $existingUser = $this->em->getRepository(User::class)
-        //     ->findOneBy(['googleId' => $googleUser->getId()]);
-        // if ($existingUser) {
-        //     return $existingUser;
-        // }
+        $existingUser = $this->em->getRepository(User::class)
+            ->findOneBy(['googleId' => $googleUser->getId()]);
+        if ($existingUser) {
+            return $existingUser;
+        }
 
-        // // 2) do we have a matching user by email?
-        // $user = $this->em->getRepository(User::class)
-        //             ->findOneBy(['email' => $email]);
-        // if ( !$user ) {
-        //     $user = new User();
-        //     $user->setEmail($email); 
-        // }   
+        // 2) do we have a matching user by email?
+        $user = $this->em->getRepository(User::class)
+                    ->findOneBy(['email' => $email]);
+        if ( !$user ) {
+            $user = new User();
+            $user->setEmail($email);
+        }   
 
-        // // 3) Maybe you just want to "register" them by creating
-        // // a User object
-        // $user->setGoogleId($googleUser->getId());
-        // $user->setRoles(["ROLE_USER", "ROLE_OAUTH_USER"]);
-        // $this->em->persist($user);
-        // $this->em->flush();
-
-        return null;
+        // 3) Maybe you just want to "register" them by creating
+        // a User object
+        $user->setGoogleId($googleUser->getId());
+        $user->setRoles(["ROLE_USER", "ROLE_OAUTH_USER"]);
+        $this->em->persist($user);
+        $this->em->flush();
+        $user = null;
+        
+        return $user;
     }
 
     /**
